@@ -1,0 +1,71 @@
+public static string FilteredUrl(string inputUrl)
+{
+    // Get the current HTTP context
+    HttpContext currentHttpContext = HttpContext.Current;
+
+    // Get the base URL of the application
+    string baseApplicationUrl = $"{currentHttpContext.Request.Url.Scheme}://{currentHttpContext.Request.Url.Authority}";
+
+    // Combine the base URL and the provided URL path
+    string fullUrl = baseApplicationUrl + inputUrl;
+
+    // Check if the URL is local
+    bool isLocalUrl = currentHttpContext.Request.Url.IsLoopback || fullUrl.StartsWith(baseApplicationUrl, StringComparison.OrdinalIgnoreCase);
+
+    // Split the string by the '?' symbol to separate the page and the query string
+    string[] urlParts = inputUrl.Split('?');
+
+    // Separate the page and the query string
+    string page = urlParts[0];
+    string queryString = urlParts[1];
+
+    // Split the query string by the '&' symbol to separate the variables
+    string[] queryVariables = queryString.Split('&');
+
+    // Create a dictionary to store the variable names and their corresponding values
+    Dictionary<string, string> variableDictionary = new Dictionary<string, string>();
+
+    // Iterate over the variables and split them into names and values
+    foreach (string queryVariable in queryVariables)
+    {
+        string[] variableParts = queryVariable.Split('=');
+        string variableName = variableParts[0];
+        string variableValue = variableParts[1];
+
+        // Add the name and value to the dictionary
+        variableDictionary.Add(variableName, variableValue);
+    }
+
+    // URL Sanitization
+    ValidPages validPages = new ValidPages();
+
+    // Add other valid pages here
+
+    bool isPageValid = validPages.PageList.Contains(page);
+    bool areParamsValid = variableDictionary.Keys.All(value => validPages.ParamList.Contains(value));
+
+    // Reconstruct the URL
+    string reconstructedURL = page + "?";
+
+    // Iterate over the variable names and values
+    foreach (var kvp in variableDictionary)
+    {
+        string variableName = kvp.Key;
+        string variableValue = kvp.Value;
+
+        // Append each variable name and value to the reconstructed URL
+        reconstructedURL += $"{variableName}={variableValue}&";
+    }
+
+    // Remove the trailing '&' character
+    reconstructedURL = reconstructedURL.TrimEnd('&');
+
+    if (isLocalUrl && isPageValid && areParamsValid)
+    {
+        return reconstructedURL;
+    }
+    else
+    {
+        return "/error.aspx";
+    }
+}
