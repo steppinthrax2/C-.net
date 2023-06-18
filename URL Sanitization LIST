@@ -1,0 +1,16 @@
+        public ValidPages()
+        {
+            pages = new List<string>
+            { 
+                "index.aspx",
+                "users.aspx",
+                "contacts.aspx"
+        };
+
+            param = new List<string>
+        {
+                "ID",
+                "DEST"
+              
+            };
+        }
